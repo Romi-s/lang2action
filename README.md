@@ -42,8 +42,8 @@ Two deliberate seams:
 ## Status / roadmap (v1 in progress)
 
 - [x] Scaffold: package layout, scene-graph schema, spatial-relation inference, CI
-- [ ] PyBullet tabletop world + ground-truth scene graph + pick-and-place executor
-- [ ] Scene-Graph MCP server (`get_scene_graph`, `find_object`, `spatial_query`)
+- [x] PyBullet tabletop world + ground-truth scene graph + pick-and-place executor
+- [x] Scene-Graph MCP server: the robot as MCP tools (see below)
 - [ ] LangGraph agent: perceive -> ground -> plan -> validate -> execute, with refusal guard
 - [ ] Eval harness: ~30 auto-generated (instruction, scene) cases, metrics table below
 - [ ] Docker + demo GIF
@@ -53,6 +53,22 @@ Two deliberate seams:
 | Referring-expression grounding accuracy | – | – |
 | Task success rate | – | – |
 | Hallucination-refusal rate | – | – |
+
+## The robot as an MCP server
+
+The MCP server owns the simulated world; any MCP client is the robot's brain. It exposes
+perception (`get_scene_graph`, `find_object`, `spatial_query`) and action
+(`execute_pick_place`, `reset_scene`) tools over stdio:
+
+```bash
+python -m lang2action.mcp_server        # or: lang2action-mcp
+```
+
+The repo ships a `.mcp.json`, so opening this project in Claude Code offers the
+`lang2action-robot` server automatically (adjust the interpreter path to your env) — you can
+literally tell Claude Code to "stack the red cube on the blue box" and watch it perceive, plan,
+and act through the tools. Scene seed and object count are set via `LANG2ACTION_SCENE_SEED` /
+`LANG2ACTION_SCENE_OBJECTS`.
 
 ## Quickstart (current state)
 

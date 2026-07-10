@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "lang2action-robot": {
+      "command": "C:\\Users\\saljo\\miniconda3\\envs\\lang2action\\python.exe",
+      "args": ["-m", "lang2action.mcp_server"],
+      "env": {
+        "PYTHONPATH": "src",
+        "LANG2ACTION_SCENE_SEED": "42",
+        "LANG2ACTION_PERCEPTION": "sim"
+      }
+    }
+  }
+}
