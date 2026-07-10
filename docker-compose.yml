@@ -1,0 +1,27 @@
+# Runs the agent alongside the real perception service.
+#
+# The sgg service builds from the sibling checkout of lightweight-scene-graph
+# (https://github.com/Romi-s/lightweight-scene-graph) - adjust the context if
+# your checkout lives elsewhere.
+#
+# Usage:
+#   docker compose build
+#   docker compose up -d sgg
+#   docker compose run --rm agent run "stack the red cube on the blue box"
+#   docker compose run --rm agent eval --n-cases 30
+services:
+  sgg:
+    build: ../lightweight-scene-graph
+    ports:
+      - "8000:8000"
+
+  agent:
+    build: .
+    environment:
+      LANG2ACTION_PERCEPTION: ${LANG2ACTION_PERCEPTION:-sgg}
+      LANG2ACTION_SGG_URL: http://sgg:8000
+      LANG2ACTION_MODEL: ${LANG2ACTION_MODEL:-openai:gpt-4o-mini}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+    depends_on:
+      - sgg

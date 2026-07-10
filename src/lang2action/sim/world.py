@@ -18,6 +18,7 @@ class TabletopWorld:
         pb.createMultiBody(0, plane, physicsClientId=self._client)
         self._specs: list[ObjectSpec] = []
         self._bodies: dict[str, int] = {}
+        self.on_step = None  # optional callable, invoked after every physics step
 
     # -- lifecycle -----------------------------------------------------------
 
@@ -50,12 +51,13 @@ class TabletopWorld:
 
     def settle(self, steps: int = 240) -> None:
         """Step physics until objects come to rest (240 steps = 1 s)."""
-        for _ in range(steps):
-            pb.stepSimulation(physicsClientId=self._client)
+        self.step(steps)
 
     def step(self, steps: int = 1) -> None:
         for _ in range(steps):
             pb.stepSimulation(physicsClientId=self._client)
+            if self.on_step is not None:
+                self.on_step()
 
     # -- state ---------------------------------------------------------------
 

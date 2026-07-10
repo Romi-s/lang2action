@@ -58,12 +58,12 @@ def run(
 
     from lang2action.agent import InProcessRobot, run_agent
     from lang2action.agent.llm import make_llm
-    from lang2action.perception.sim_backend import SimGroundTruthBackend
+    from lang2action.perception.factory import make_perception
     from lang2action.sim import PyBulletExecutor, TabletopWorld, generate_scene
     from lang2action.sim.camera import render, save_png
 
     settings = load_settings()
-    typer.echo(f"model: {settings.model}", err=True)
+    typer.echo(f"model: {settings.model} | perception: {settings.perception_backend}", err=True)
 
     def snapshot(world, tag: str) -> None:
         if render_dir:
@@ -73,7 +73,7 @@ def run(
 
     with TabletopWorld() as world:
         world.spawn(generate_scene(seed=seed, n_objects=n_objects))
-        robot = InProcessRobot(SimGroundTruthBackend(world), PyBulletExecutor(world))
+        robot = InProcessRobot(make_perception(settings, world), PyBulletExecutor(world))
         snapshot(world, "before")
         state = run_agent(robot, make_llm(settings), instruction)
         snapshot(world, "after")
@@ -86,6 +86,54 @@ def run(
         )
     typer.echo(f"outcome: {state['outcome']} - {state['message']}")
     raise typer.Exit(code={"success": 0, "refused": 2}.get(state["outcome"], 1))
+
+
+@app.command()
+def demo(
+    seed: int = typer.Option(42, help="Random seed for the tabletop scene."),
+    out: str = typer.Option("outputs/demo.gif", help="Output GIF path."),
+) -> None:
+    """Record a scripted pick-and-place sequence as a GIF (no API key needed)."""
+    from pathlib import Path
+
+    from PIL import Image
+
+    from lang2action.action.base import PickPlace
+    from lang2action.sim import PyBulletExecutor, TabletopWorld, generate_scene
+    from lang2action.sim.camera import render
+
+    frames: list = []
+    with TabletopWorld() as world:
+        specs = generate_scene(seed=seed, n_objects=4)
+        world.spawn(specs)
+
+        counter = {"steps": 0}
+
+        def capture() -> None:
+            counter["steps"] += 1
+            if counter["steps"] % 8 == 0:
+                frames.append(Image.fromarray(render(world, view="side", width=480, height=360)))
+
+        world.on_step = capture
+        executor = PyBulletExecutor(world)
+        script = [
+            PickPlace(target_id=specs[0].id, relation="on_top_of", reference_id=specs[1].id),
+            PickPlace(target_id=specs[2].id, relation="behind", reference_id=specs[1].id),
+        ]
+        for action in script:
+            result = executor.execute(action)
+            typer.echo(
+                f"{action.target_id} {action.relation} {action.reference_id}: "
+                f"{'ok' if result.success else result.message}",
+                err=True,
+            )
+
+    path = Path(out)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    frames[0].save(
+        path, save_all=True, append_images=frames[1:], duration=60, loop=0, optimize=True
+    )
+    typer.echo(f"saved {path} ({len(frames)} frames)")
 
 
 @app.command()

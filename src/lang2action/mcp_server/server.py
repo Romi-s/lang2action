@@ -35,21 +35,16 @@ _state: dict = {}
 def _robot() -> dict:
     """Lazily build the world, perception backend, and executor (once)."""
     if not _state:
-        from lang2action.perception.sim_backend import SimGroundTruthBackend
+        from lang2action.perception.factory import make_perception
         from lang2action.sim import PyBulletExecutor, TabletopWorld, generate_scene
 
         settings = load_settings()
-        if settings.perception_backend != "sim":
-            raise RuntimeError(
-                f"perception backend '{settings.perception_backend}' is not available yet; "
-                "the real SGG backend lands with milestone 4 - use LANG2ACTION_PERCEPTION=sim"
-            )
         seed = int(os.getenv("LANG2ACTION_SCENE_SEED", "42"))
         n_objects = int(os.getenv("LANG2ACTION_SCENE_OBJECTS", "4"))
         world = TabletopWorld()
         world.spawn(generate_scene(seed=seed, n_objects=n_objects))
         _state["world"] = world
-        _state["backend"] = SimGroundTruthBackend(world)
+        _state["backend"] = make_perception(settings, world)
         _state["executor"] = PyBulletExecutor(world)
     return _state
 

@@ -44,15 +44,26 @@ Two deliberate seams:
 - [x] Scaffold: package layout, scene-graph schema, spatial-relation inference, CI
 - [x] PyBullet tabletop world + ground-truth scene graph + pick-and-place executor
 - [x] Scene-Graph MCP server: the robot as MCP tools (see below)
-- [ ] LangGraph agent: perceive -> ground -> plan -> validate -> execute, with refusal guard
-- [ ] Eval harness: ~30 auto-generated (instruction, scene) cases, metrics table below
-- [ ] Docker + demo GIF
+- [x] LangGraph agent: perceive -> ground -> plan -> validate -> execute, with refusal guard
+- [x] Eval harness: 30 auto-generated (instruction, scene) cases, three headline metrics
+- [x] Real perception backend: camera render -> Lightweight SGG service over HTTP
+- [x] Docker + compose (agent + SGG service) + demo GIF
+- [ ] Fill the metrics table from a live eval run (`lang2action eval`, both backends)
 
 | Metric | sim backend | sgg backend |
 | --- | --- | --- |
 | Referring-expression grounding accuracy | – | – |
 | Task success rate | – | – |
 | Hallucination-refusal rate | – | – |
+
+The eval respects `LANG2ACTION_PERCEPTION`, so the same 30 cases score both perception
+backends: `sim` isolates reasoning errors (perception is ground truth by construction),
+`sgg` adds real detection + relation prediction from my thesis pipeline. The agent's LLM
+is called once per instruction (a single structured grounding call); the hallucination
+guard that decides refusals is deterministic code, and task success is verified
+physically after the world settles.
+
+![Pick-and-place demo](docs/demo.gif)
 
 ## The robot as an MCP server
 
@@ -76,7 +87,16 @@ and act through the tools. Scene seed and object count are set via `LANG2ACTION_
 pip install -e ".[dev]"
 pytest                     # all tests run against mocks - no API key needed
 lang2action scene --seed 42 --render-dir outputs   # seeded scene, ground-truth graph, PNG renders
-lang2action run "stack the red cube on the blue box"
+lang2action demo --out docs/demo.gif               # scripted pick-and-place GIF, no API key
+lang2action run "stack the red cube on the blue box"   # the full agent (needs the LLM key)
+lang2action eval --n-cases 30 --output report.json     # metrics table (needs the LLM key)
+```
+
+With Docker (agent + real SGG perception service):
+
+```bash
+docker compose up -d sgg
+docker compose run --rm agent run "stack the red cube on the blue box"
 ```
 
 > **Windows note:** `pybullet` publishes no Windows wheels on PyPI, so `pip install` attempts a

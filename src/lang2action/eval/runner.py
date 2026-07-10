@@ -13,8 +13,9 @@ import json
 from dataclasses import asdict, dataclass, field
 
 from lang2action.agent import InProcessRobot, run_agent
+from lang2action.config import load_settings
 from lang2action.eval.cases import EvalCase
-from lang2action.perception.sim_backend import SimGroundTruthBackend
+from lang2action.perception.factory import make_perception
 from lang2action.sim import PyBulletExecutor, TabletopWorld, generate_scene
 
 
@@ -88,7 +89,10 @@ class EvalReport:
 def run_case(case: EvalCase, llm) -> CaseResult:
     with TabletopWorld() as world:
         world.spawn(generate_scene(seed=case.scene_seed, n_objects=case.n_objects))
-        robot = InProcessRobot(SimGroundTruthBackend(world), PyBulletExecutor(world))
+        # perception respects LANG2ACTION_PERCEPTION, so the same eval set
+        # reports metrics for both the sim and the real-SGG backend
+        perception = make_perception(load_settings(), world)
+        robot = InProcessRobot(perception, PyBulletExecutor(world))
         state = run_agent(robot, llm, case.instruction)
 
     outcome = state["outcome"]
