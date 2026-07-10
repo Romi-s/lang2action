@@ -88,5 +88,37 @@ def run(
     raise typer.Exit(code={"success": 0, "refused": 2}.get(state["outcome"], 1))
 
 
+@app.command()
+def eval(
+    n_cases: int = typer.Option(30, help="Number of auto-generated cases."),
+    base_seed: int = typer.Option(0, help="Base seed for the case generator."),
+    output: str = typer.Option("", help="If set, write the full JSON report here."),
+) -> None:
+    """Run the eval set through the agent (needs the API key for LANG2ACTION_MODEL).
+
+    Reports grounding accuracy, task success rate, and hallucination-refusal rate.
+    """
+    from pathlib import Path
+
+    from lang2action.agent.llm import make_llm
+    from lang2action.eval import build_cases, run_eval
+
+    settings = load_settings()
+    typer.echo(f"model: {settings.model}", err=True)
+    cases = build_cases(n_cases=n_cases, base_seed=base_seed)
+
+    def progress(result) -> None:
+        marker = "ok" if result.outcome in ("success", "refused") else "!!"
+        typer.echo(
+            f"[{marker}] {result.case_id}: {result.instruction!r} -> {result.outcome}", err=True
+        )
+
+    report = run_eval(cases, make_llm(settings), on_result=progress)
+    typer.echo(report.as_markdown())
+    if output:
+        Path(output).write_text(report.to_json(), encoding="utf-8")
+        typer.echo(f"report written to {output}", err=True)
+
+
 if __name__ == "__main__":
     app()
