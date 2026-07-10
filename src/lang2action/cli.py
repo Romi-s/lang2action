@@ -42,14 +42,50 @@ def scene(
 
 
 @app.command()
-def run(instruction: str) -> None:
-    """Execute a natural-language tabletop instruction (agent lands in milestone 3)."""
+def run(
+    instruction: str,
+    seed: int = typer.Option(42, help="Random seed for the tabletop scene."),
+    n_objects: int = typer.Option(4, help="Number of objects on the table."),
+    render_dir: str = typer.Option("", help="If set, save before/after renders here."),
+) -> None:
+    """Run a natural-language instruction through the agent on a seeded scene.
+
+    Exit codes: 0 = executed successfully, 2 = refused (hallucination guard /
+    infeasible instruction), 1 = execution failed. Needs the API key matching
+    LANG2ACTION_MODEL.
+    """
+    from pathlib import Path
+
+    from lang2action.agent import InProcessRobot, run_agent
+    from lang2action.agent.llm import make_llm
+    from lang2action.perception.sim_backend import SimGroundTruthBackend
+    from lang2action.sim import PyBulletExecutor, TabletopWorld, generate_scene
+    from lang2action.sim.camera import render, save_png
+
     settings = load_settings()
-    typer.echo(f"instruction : {instruction}")
-    typer.echo(f"model       : {settings.model}")
-    typer.echo(f"perception  : {settings.perception_backend}")
-    typer.echo("The planning agent is not implemented yet (milestone 3) - scaffold only.")
-    raise typer.Exit(code=1)
+    typer.echo(f"model: {settings.model}", err=True)
+
+    def snapshot(world, tag: str) -> None:
+        if render_dir:
+            out = Path(render_dir)
+            out.mkdir(parents=True, exist_ok=True)
+            save_png(render(world, view="side"), str(out / f"run_{tag}.png"))
+
+    with TabletopWorld() as world:
+        world.spawn(generate_scene(seed=seed, n_objects=n_objects))
+        robot = InProcessRobot(SimGroundTruthBackend(world), PyBulletExecutor(world))
+        snapshot(world, "before")
+        state = run_agent(robot, make_llm(settings), instruction)
+        snapshot(world, "after")
+
+    grounding = state.get("grounding")
+    if grounding is not None and grounding.feasible:
+        typer.echo(
+            f"grounding: {grounding.target_id} {grounding.relation} {grounding.reference_id}",
+            err=True,
+        )
+    typer.echo(f"outcome: {state['outcome']} - {state['message']}")
+    raise typer.Exit(code={"success": 0, "refused": 2}.get(state["outcome"], 1))
 
 
 if __name__ == "__main__":

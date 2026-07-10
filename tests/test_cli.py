@@ -12,7 +12,9 @@ def test_version():
     assert __version__ in result.output
 
 
-def test_run_reports_not_implemented():
-    result = runner.invoke(app, ["run", "stack the red cube on the blue box"])
-    assert result.exit_code == 1
-    assert "milestone 3" in result.output
+def test_run_help_documents_exit_codes():
+    # the real agent path (grounding, guard, execution) is covered in
+    # test_agent.py / test_agent_sim.py without needing an API key
+    result = runner.invoke(app, ["run", "--help"])
+    assert result.exit_code == 0
+    assert "refused" in result.output
