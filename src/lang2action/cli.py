@@ -15,6 +15,33 @@ def version() -> None:
 
 
 @app.command()
+def scene(
+    seed: int = typer.Option(42, help="Random seed for scene generation."),
+    n_objects: int = typer.Option(4, help="Number of objects on the table."),
+    render_dir: str = typer.Option("", help="If set, save top/side PNG renders here."),
+) -> None:
+    """Generate a seeded tabletop scene and print its ground-truth scene graph."""
+    # sim imports are lazy so the CLI works in environments without pybullet
+    from pathlib import Path
+
+    from lang2action.perception.sim_backend import SimGroundTruthBackend
+    from lang2action.sim import TabletopWorld, generate_scene
+    from lang2action.sim.camera import render, save_png
+
+    with TabletopWorld() as world:
+        world.spawn(generate_scene(seed=seed, n_objects=n_objects))
+        graph = SimGroundTruthBackend(world).get_scene_graph()
+        typer.echo(graph.model_dump_json(indent=2))
+        if render_dir:
+            out = Path(render_dir)
+            out.mkdir(parents=True, exist_ok=True)
+            for view in ("top", "side"):
+                path = out / f"scene_seed{seed}_{view}.png"
+                save_png(render(world, view=view), str(path))
+                typer.echo(f"saved {path}", err=True)
+
+
+@app.command()
 def run(instruction: str) -> None:
     """Execute a natural-language tabletop instruction (agent lands in milestone 3)."""
     settings = load_settings()
