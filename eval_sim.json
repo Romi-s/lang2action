@@ -1,0 +1,310 @@
+{
+  "metrics": {
+    "grounding_accuracy": 0.8636363636363636,
+    "task_success_rate": 0.9090909090909091,
+    "hallucination_refusal_rate": 1.0,
+    "over_refusal_rate": 0.09090909090909091
+  },
+  "cases": [
+    {
+      "case_id": "case000_refuse",
+      "instruction": "put the purple cube on top of the blue cylinder",
+      "expected": "refuse",
+      "outcome": "refused",
+      "message": "The blue cylinder is missing from the scene.",
+      "grounding_correct": null,
+      "task_success": null,
+      "refused_correctly": true
+    },
+    {
+      "case_id": "case001_execute",
+      "instruction": "put the cylinder behind the blue cube",
+      "expected": "execute",
+      "outcome": "success",
+      "message": "done",
+      "grounding_correct": true,
+      "task_success": true,
+      "refused_correctly": null
+    },
+    {
+      "case_id": "case002_execute",
+      "instruction": "move the orange box behind the purple cylinder",
+      "expected": "execute",
+      "outcome": "success",
+      "message": "done",
+      "grounding_correct": true,
+      "task_success": true,
+      "refused_correctly": null
+    },
+    {
+      "case_id": "case003_execute",
+      "instruction": "put the blue box in front of the orange cube",
+      "expected": "execute",
+      "outcome": "success",
+      "message": "done",
+      "grounding_correct": true,
+      "task_success": true,
+      "refused_correctly": null
+    },
+    {
+      "case_id": "case004_refuse",
+      "instruction": "put the green cube to the right of the green box",
+      "expected": "refuse",
+      "outcome": "refused",
+      "message": "The instruction references a 'green box' which is not present in the scene.",
+      "grounding_correct": null,
+      "task_success": null,
+      "refused_correctly": true
+    },
+    {
+      "case_id": "case005_refuse",
+      "instruction": "put the orange cube in front of the red box",
+      "expected": "refuse",
+      "outcome": "refused",
+      "message": "The red box is missing from the scene.",
+      "grounding_correct": null,
+      "task_success": null,
+      "refused_correctly": true
+    },
+    {
+      "case_id": "case006_refuse",
+      "instruction": "put the red cylinder on top of the blue box",
+      "expected": "refuse",
+      "outcome": "refused",
+      "message": "The object 'red cylinder' is missing from the scene.",
+      "grounding_correct": null,
+      "task_success": null,
+      "refused_correctly": true
+    },
+    {
+      "case_id": "case007_execute",
+      "instruction": "move the yellow cube on top of the green cylinder",
+      "expected": "execute",
+      "outcome": "success",
+      "message": "done",
+      "grounding_correct": true,
+      "task_success": true,
+      "refused_correctly": null
+    },
+    {
+      "case_id": "case008_execute",
+      "instruction": "move the yellow cylinder behind the yellow box",
+      "expected": "execute",
+      "outcome": "success",
+      "message": "done",
+      "grounding_correct": true,
+      "task_success": true,
+      "refused_correctly": null
+    },
+    {
+      "case_id": "case009_execute",
+      "instruction": "put the cube that is to the left of the green cylinder to the right of the red box",
+      "expected": "execute",
+      "outcome": "success",
+      "message": "done",
+      "grounding_correct": true,
+      "task_success": true,
+      "refused_correctly": null
+    },
+    {
+      "case_id": "case010_execute",
+      "instruction": "stack the box that is to the left of the purple box on the purple box",
+      "expected": "execute",
+      "outcome": "success",
+      "message": "done",
+      "grounding_correct": true,
+      "task_success": true,
+      "refused_correctly": null
+    },
+    {
+      "case_id": "case011_execute",
+      "instruction": "put the red cube to the right of the yellow cylinder",
+      "expected": "execute",
+      "outcome": "success",
+      "message": "done",
+      "grounding_correct": true,
+      "task_success": true,
+      "refused_correctly": null
+    },
+    {
+      "case_id": "case012_execute",
+      "instruction": "put the cube that is to the left of the yellow box on top of the blue cube",
+      "expected": "execute",
+      "outcome": "success",
+      "message": "done",
+      "grounding_correct": true,
+      "task_success": true,
+      "refused_correctly": null
+    },
+    {
+      "case_id": "case013_refuse",
+      "instruction": "put the green cylinder on top of the orange cylinder",
+      "expected": "refuse",
+      "outcome": "refused",
+      "message": "The instruction references an 'orange cylinder', but the scene graph contains an 'orange_cube'.",
+      "grounding_correct": null,
+      "task_success": null,
+      "refused_correctly": true
+    },
+    {
+      "case_id": "case014_execute",
+      "instruction": "put the box that is behind the orange box behind the red cube",
+      "expected": "execute",
+      "outcome": "success",
+      "message": "done",
+      "grounding_correct": false,
+      "task_success": true,
+      "refused_correctly": null
+    },
+    {
+      "case_id": "case015_refuse",
+      "instruction": "put the green cube behind the purple cube",
+      "expected": "refuse",
+      "outcome": "refused",
+      "message": "The object 'purple_cube' is missing from the scene.",
+      "grounding_correct": null,
+      "task_success": null,
+      "refused_correctly": true
+    },
+    {
+      "case_id": "case016_execute",
+      "instruction": "put the cube that is to the right of the yellow cylinder to the left of the yellow cylinder",
+      "expected": "execute",
+      "outcome": "success",
+      "message": "done",
+      "grounding_correct": true,
+      "task_success": true,
+      "refused_correctly": null
+    },
+    {
+      "case_id": "case017_refuse",
+      "instruction": "put the green box to the right of the blue cube",
+      "expected": "refuse",
+      "outcome": "refused",
+      "message": "The green box is missing from the scene.",
+      "grounding_correct": null,
+      "task_success": null,
+      "refused_correctly": true
+    },
+    {
+      "case_id": "case018_execute",
+      "instruction": "move the purple cube to the right of the green cube",
+      "expected": "execute",
+      "outcome": "success",
+      "message": "done",
+      "grounding_correct": true,
+      "task_success": true,
+      "refused_correctly": null
+    },
+    {
+      "case_id": "case019_execute",
+      "instruction": "move the purple cube to the left of the red box",
+      "expected": "execute",
+      "outcome": "success",
+      "message": "done",
+      "grounding_correct": true,
+      "task_success": true,
+      "refused_correctly": null
+    },
+    {
+      "case_id": "case020_execute",
+      "instruction": "place the purple cylinder behind the green cube",
+      "expected": "execute",
+      "outcome": "success",
+      "message": "done",
+      "grounding_correct": true,
+      "task_success": true,
+      "refused_correctly": null
+    },
+    {
+      "case_id": "case021_execute",
+      "instruction": "move the orange box to the right of the green cylinder",
+      "expected": "execute",
+      "outcome": "success",
+      "message": "done",
+      "grounding_correct": true,
+      "task_success": true,
+      "refused_correctly": null
+    },
+    {
+      "case_id": "case022_execute",
+      "instruction": "move the purple box to the left of the green box",
+      "expected": "execute",
+      "outcome": "refused",
+      "message": "The instruction is asking to move the purple box to a position that is already occupied by the green box.",
+      "grounding_correct": false,
+      "task_success": false,
+      "refused_correctly": null
+    },
+    {
+      "case_id": "case023_execute",
+      "instruction": "put the orange cube to the left of the purple cylinder",
+      "expected": "execute",
+      "outcome": "success",
+      "message": "done",
+      "grounding_correct": true,
+      "task_success": true,
+      "refused_correctly": null
+    },
+    {
+      "case_id": "case024_execute",
+      "instruction": "put the purple cube behind the purple box",
+      "expected": "execute",
+      "outcome": "success",
+      "message": "done",
+      "grounding_correct": true,
+      "task_success": true,
+      "refused_correctly": null
+    },
+    {
+      "case_id": "case025_refuse",
+      "instruction": "put the yellow cylinder on top of the blue cube",
+      "expected": "refuse",
+      "outcome": "refused",
+      "message": "The yellow cylinder is missing from the scene.",
+      "grounding_correct": null,
+      "task_success": null,
+      "refused_correctly": true
+    },
+    {
+      "case_id": "case026_execute",
+      "instruction": "move the orange cube in front of the blue cube",
+      "expected": "execute",
+      "outcome": "success",
+      "message": "done",
+      "grounding_correct": true,
+      "task_success": true,
+      "refused_correctly": null
+    },
+    {
+      "case_id": "case027_execute",
+      "instruction": "put the red cylinder to the left of the red cube",
+      "expected": "execute",
+      "outcome": "success",
+      "message": "done",
+      "grounding_correct": true,
+      "task_success": true,
+      "refused_correctly": null
+    },
+    {
+      "case_id": "case028_execute",
+      "instruction": "put the cylinder that is to the left of the purple cylinder on top of the purple cylinder",
+      "expected": "execute",
+      "outcome": "refused",
+      "message": "The instruction references a cylinder that is to the left of the purple cylinder, but there is no such cylinder in the scene.",
+      "grounding_correct": false,
+      "task_success": false,
+      "refused_correctly": null
+    },
+    {
+      "case_id": "case029_execute",
+      "instruction": "place the cylinder that is to the left of the yellow cube on top of the green cylinder",
+      "expected": "execute",
+      "outcome": "success",
+      "message": "done",
+      "grounding_correct": true,
+      "task_success": true,
+      "refused_correctly": null
+    }
+  ]
+}

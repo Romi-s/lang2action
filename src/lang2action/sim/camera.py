@@ -10,6 +10,9 @@ VIEWS = {
     # eye position, look-at target
     "top": ((0.0, 0.0, 0.9), (0.0, 0.0, 0.0)),
     "side": ((0.0, -0.85, 0.45), (0.0, 0.0, 0.05)),
+    # closer view used for the real SGG backend: objects fill more of the frame,
+    # which the open-vocabulary detector needs on synthetic renders
+    "sgg": ((0.0, -0.48, 0.30), (0.0, 0.0, 0.03)),
 }
 
 
@@ -33,6 +36,7 @@ def render(
         viewMatrix=view_matrix,
         projectionMatrix=proj_matrix,
         renderer=pb.ER_TINY_RENDERER,
+        lightDirection=(0.4, -0.6, 0.9),
         physicsClientId=world.client,
     )
     rgba = np.asarray(rgba, dtype=np.uint8).reshape(height, width, 4)

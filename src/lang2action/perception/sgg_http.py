@@ -36,8 +36,8 @@ PREDICATE_MAP: dict[str, Relation] = {
     "behind": "behind",
 }
 
-RENDER_WIDTH = 640
-RENDER_HEIGHT = 480
+RENDER_WIDTH = 1280
+RENDER_HEIGHT = 960
 
 
 def sgg_to_scene_graph(payload: dict, width: int, height: int) -> SceneGraph:
@@ -79,7 +79,7 @@ def sgg_to_scene_graph(payload: dict, width: int, height: int) -> SceneGraph:
 
 class SggHttpBackend(PerceptionBackend):
     def __init__(
-        self, world, base_url: str, view: str = "side", client: httpx.Client | None = None
+        self, world, base_url: str, view: str = "sgg", client: httpx.Client | None = None
     ):
         self._world = world
         self._base_url = base_url.rstrip("/")

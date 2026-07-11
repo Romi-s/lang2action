@@ -52,9 +52,9 @@ Two deliberate seams:
 
 | Metric | sim backend | sgg backend |
 | --- | --- | --- |
-| Referring-expression grounding accuracy | – | – |
-| Task success rate | – | – |
-| Hallucination-refusal rate | – | – |
+| Referring-expression grounding accuracy | 0.86 | – |
+| Task success rate | 0.90 | – |
+| Hallucination-refusal rate | 1.0 | – |
 
 The eval respects `LANG2ACTION_PERCEPTION`, so the same 30 cases score both perception
 backends: `sim` isolates reasoning errors (perception is ground truth by construction),
@@ -62,6 +62,15 @@ backends: `sim` isolates reasoning errors (perception is ground truth by constru
 is called once per instruction (a single structured grounding call); the hallucination
 guard that decides refusals is deterministic code, and task success is verified
 physically after the world settles.
+
+> **The sgg column quantifies a documented domain gap.** The detector (YOLO-World
+> `yolov8s-worldv2`, CPU) was built for real tabletop photos; on clean flat-shaded PyBullet
+> renders it finds ~0-1 of 4 objects per scene even at 0.05 confidence (probed across object
+> scales, cameras, resolutions, and floor textures - a closer high-res `sgg` camera view is the
+> best of them and is what the backend uses). The important part is what the agent does about
+> it: unseen objects produce *refusals*, never fabricated actions - the guard treats perception
+> gaps and hallucinations identically. Closing the gap (synthetic-domain adaptation of the
+> detector + Depth-Anything predicates) is the v2 roadmap.
 
 ![Pick-and-place demo](docs/demo.gif)
 
