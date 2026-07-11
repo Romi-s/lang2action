@@ -48,13 +48,17 @@ Two deliberate seams:
 - [x] Eval harness: 30 auto-generated (instruction, scene) cases, three headline metrics
 - [x] Real perception backend: camera render -> Lightweight SGG service over HTTP
 - [x] Docker + compose (agent + SGG service) + demo GIF
-- [ ] Fill the metrics table from a live eval run (`lang2action eval`, both backends)
+- [x] Fill the metrics table from a live eval run (`lang2action eval`, both backends)
 
 | Metric | sim backend | sgg backend |
 | --- | --- | --- |
-| Referring-expression grounding accuracy | 0.86 | – |
-| Task success rate | 0.90 | – |
-| Hallucination-refusal rate | 1.0 | – |
+| Referring-expression grounding accuracy | 0.86 | 0.00 |
+| Task success rate | 0.90 | 0.00 |
+| Hallucination-refusal rate | 1.00 | 1.00 |
+| Over-refusal rate (diagnostic) | 0.09 | 1.00 |
+
+*30 auto-generated cases, `gpt-4o-mini`, v1 single-step agent. Re-run `lang2action eval` after
+agent changes to refresh.*
 
 The eval respects `LANG2ACTION_PERCEPTION`, so the same 30 cases score both perception
 backends: `sim` isolates reasoning errors (perception is ground truth by construction),

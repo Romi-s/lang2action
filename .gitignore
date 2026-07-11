@@ -15,6 +15,7 @@ htmlcov/
 
 # Artifacts
 outputs/
+eval_*.json
 *.mp4
 *.gif
 !docs/**/*.gif
