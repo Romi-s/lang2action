@@ -60,6 +60,16 @@ Two deliberate seams:
 *30 auto-generated cases, `gpt-4o-mini`, v1 single-step agent. Re-run `lang2action eval` after
 agent changes to refresh.*
 
+## v2 (in progress)
+
+- [x] Multi-step instructions ("stack A on B, **then** put C left of A"): the grounding LLM
+  emits an ordered step list, the guard validates every step before anything executes, and the
+  agent re-perceives between steps. The eval set now includes 5 two-step sequences graded on
+  the full step sequence.
+- [ ] Synthetic-domain adaptation of the detector (close the sgg gap quantified above)
+- [ ] Depth predicates end-to-end (Depth-Anything already runs inside the SGG service;
+  validate front/behind on renders once detection works)
+
 The eval respects `LANG2ACTION_PERCEPTION`, so the same 30 cases score both perception
 backends: `sim` isolates reasoning errors (perception is ground truth by construction),
 `sgg` adds real detection + relation prediction from my thesis pipeline. The agent's LLM

@@ -31,6 +31,9 @@ RELATION_PHRASES: dict[Relation, str] = {
 VERBS = ["put", "place", "move"]
 
 
+Step = tuple[str, Relation, str]  # (target_id, relation, reference_id)
+
+
 @dataclass(frozen=True)
 class EvalCase:
     case_id: str
@@ -38,9 +41,7 @@ class EvalCase:
     n_objects: int
     instruction: str
     expected: Literal["execute", "refuse"]
-    expected_target: str | None = None
-    expected_relation: Relation | None = None
-    expected_reference: str | None = None
+    expected_steps: tuple[Step, ...] = ()  # empty for refuse-cases
 
 
 def _noun(spec: ObjectSpec) -> str:
@@ -117,9 +118,32 @@ def _execute_case(index: int, rng: random.Random) -> EvalCase:
         n_objects=n_objects,
         instruction=instruction,
         expected="execute",
-        expected_target=target.id,
-        expected_relation=relation,
-        expected_reference=reference.id,
+        expected_steps=((target.id, relation, reference.id),),
+    )
+
+
+def _execute2_case(index: int, rng: random.Random) -> EvalCase:
+    """Two-step sequential instruction: '..., then ...' (v2 multi-step)."""
+    scene_seed = 1000 + index
+    n_objects = rng.choice([4, 5])
+    specs = generate_scene(seed=scene_seed, n_objects=n_objects)
+    a, b, c = rng.sample(specs, 3)
+    relation1: Relation = rng.choice(list(RELATION_PHRASES))
+    # step 2 places relative to the object step 1 just moved; keep it planar
+    # so the sequence stays physically stable
+    relation2: Relation = rng.choice(["left_of", "right_of", "in_front_of", "behind"])
+    verb1, verb2 = rng.choice(VERBS), rng.choice(VERBS)
+    instruction = (
+        f"{verb1} {_noun(a)} {RELATION_PHRASES[relation1]} {_noun(b)}, "
+        f"then {verb2} {_noun(c)} {RELATION_PHRASES[relation2]} {_noun(a)}"
+    )
+    return EvalCase(
+        case_id=f"case{index:03d}_execute2",
+        scene_seed=scene_seed,
+        n_objects=n_objects,
+        instruction=instruction,
+        expected="execute",
+        expected_steps=((a.id, relation1, b.id), (c.id, relation2, a.id)),
     )
 
 
@@ -152,13 +176,24 @@ def _refuse_case(index: int, rng: random.Random) -> EvalCase:
     )
 
 
-def build_cases(n_cases: int = 30, refusal_fraction: float = 0.27, base_seed: int = 0):
-    """Deterministically build the eval set (default: 30 cases, 8 of them refusals)."""
+def build_cases(
+    n_cases: int = 30,
+    refusal_fraction: float = 0.27,
+    multi_step_fraction: float = 0.17,
+    base_seed: int = 0,
+):
+    """Deterministically build the eval set.
+
+    Default mix for 30 cases: 8 refusals, 5 two-step sequences, 17 single steps.
+    """
     rng = random.Random(base_seed)
     n_refuse = round(n_cases * refusal_fraction)
-    kinds = ["refuse"] * n_refuse + ["execute"] * (n_cases - n_refuse)
+    n_multi = round(n_cases * multi_step_fraction)
+    kinds = (
+        ["refuse"] * n_refuse
+        + ["execute2"] * n_multi
+        + ["execute"] * (n_cases - n_refuse - n_multi)
+    )
     rng.shuffle(kinds)
-    return [
-        _refuse_case(i, rng) if kind == "refuse" else _execute_case(i, rng)
-        for i, kind in enumerate(kinds)
-    ]
+    builders = {"refuse": _refuse_case, "execute": _execute_case, "execute2": _execute2_case}
+    return [builders[kind](i, rng) for i, kind in enumerate(kinds)]

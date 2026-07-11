@@ -5,8 +5,22 @@ from pydantic import BaseModel, Field
 from lang2action.perception.models import Relation
 
 
+class GroundedStep(BaseModel):
+    """One pick-and-place step, grounded in the scene."""
+
+    target_id: str = Field(
+        description="Id of the object to pick, copied VERBATIM from the scene graph."
+    )
+    relation: Relation = Field(
+        description="Where to place the target relative to the reference object."
+    )
+    reference_id: str = Field(
+        description="Id of the reference object, copied VERBATIM from the scene graph."
+    )
+
+
 class Grounding(BaseModel):
-    """The single pick-and-place step an instruction asks for, grounded in the scene."""
+    """The ordered pick-and-place steps an instruction asks for (v2: multi-step)."""
 
     feasible: bool = Field(
         description=(
@@ -14,17 +28,12 @@ class Grounding(BaseModel):
             "graph and the reference is unambiguous. False otherwise."
         )
     )
-    target_id: str | None = Field(
-        default=None,
-        description="Id of the object to pick, copied VERBATIM from the scene graph.",
-    )
-    relation: Relation | None = Field(
-        default=None,
-        description="Where to place the target relative to the reference object.",
-    )
-    reference_id: str | None = Field(
-        default=None,
-        description="Id of the reference object, copied VERBATIM from the scene graph.",
+    steps: list[GroundedStep] = Field(
+        default_factory=list,
+        description=(
+            "The steps in execution order. A single-step instruction produces one step; "
+            "'do X, then Y' produces two. Empty when feasible is false."
+        ),
     )
     reason: str = Field(
         default="",

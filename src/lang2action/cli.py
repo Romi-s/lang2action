@@ -80,10 +80,8 @@ def run(
 
     grounding = state.get("grounding")
     if grounding is not None and grounding.feasible:
-        typer.echo(
-            f"grounding: {grounding.target_id} {grounding.relation} {grounding.reference_id}",
-            err=True,
-        )
+        for i, s in enumerate(grounding.steps, start=1):
+            typer.echo(f"step {i}: {s.target_id} {s.relation} {s.reference_id}", err=True)
     typer.echo(f"outcome: {state['outcome']} - {state['message']}")
     raise typer.Exit(code={"success": 0, "refused": 2}.get(state["outcome"], 1))
 

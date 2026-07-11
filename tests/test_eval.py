@@ -7,7 +7,7 @@ import pytest
 pytest.importorskip("pybullet")
 pytest.importorskip("langgraph")
 
-from lang2action.agent import Grounding  # noqa: E402
+from lang2action.agent import GroundedStep, Grounding  # noqa: E402
 from lang2action.eval import build_cases, run_eval  # noqa: E402
 from lang2action.eval.runner import run_case  # noqa: E402
 
@@ -30,9 +30,10 @@ def oracle_grounding(case) -> Grounding:
         return Grounding(feasible=False, reason="referenced object is not in the scene")
     return Grounding(
         feasible=True,
-        target_id=case.expected_target,
-        relation=case.expected_relation,
-        reference_id=case.expected_reference,
+        steps=[
+            GroundedStep(target_id=t, relation=r, reference_id=o)
+            for t, r, o in case.expected_steps
+        ],
     )
 
 
@@ -48,11 +49,19 @@ def test_case_mix():
     cases = build_cases(n_cases=30)
     refusals = [c for c in cases if c.expected == "refuse"]
     executes = [c for c in cases if c.expected == "execute"]
+    multi = [c for c in executes if len(c.expected_steps) == 2]
     assert len(refusals) == 8
     assert len(executes) == 22
+    assert len(multi) == 5
+    for case in refusals:
+        assert case.expected_steps == ()
     for case in executes:
-        assert case.expected_target and case.expected_relation and case.expected_reference
-        assert case.expected_target != case.expected_reference
+        assert case.expected_steps
+        for target, relation, reference in case.expected_steps:
+            assert target and relation and reference
+            assert target != reference
+    for case in multi:
+        assert "then" in case.instruction
 
 
 # -- grading with an oracle (real sim) ---------------------------------------------
@@ -83,9 +92,13 @@ def test_hallucinated_grounding_is_graded_as_refused():
         [
             Grounding(
                 feasible=True,
-                target_id="imaginary_thing",
-                relation="on_top_of",
-                reference_id=case.expected_reference,
+                steps=[
+                    GroundedStep(
+                        target_id="imaginary_thing",
+                        relation="on_top_of",
+                        reference_id=case.expected_steps[0][2],
+                    )
+                ],
             )
         ]
     )

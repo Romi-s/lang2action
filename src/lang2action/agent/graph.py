@@ -24,7 +24,7 @@ AgentOutcome = Literal["success", "refused", "failed"]
 GROUNDING_SYSTEM_PROMPT = """\
 You are the grounding module of a tabletop robot. You receive the robot's scene graph
 (objects with ids like "red_cube", plus pairwise spatial relations) and a natural-language
-instruction. Identify the single pick-and-place step the instruction asks for.
+instruction. Identify the ordered pick-and-place steps the instruction asks for.
 
 Rules:
 - target_id and reference_id MUST be copied verbatim from the scene graph object ids.
@@ -33,6 +33,9 @@ Rules:
   "on" / "onto" / "on top of" mean on_top_of. "next to" / "beside" mean left_of or
   right_of - pick either. The viewer's perspective matches the graph's relations.
 - Use the graph's relations to resolve descriptions like "the cube left of the box".
+- A simple instruction is one step. Sequential instructions ("do X, then Y";
+  "after that ...") become multiple steps in execution order. Object ids stay stable
+  when objects move, so later steps may reference objects moved by earlier steps.
 - If the instruction references an object that is not in the scene, set feasible=false
   and name the missing object in reason.
 - If the instruction is ambiguous (matches several objects with no way to choose),
@@ -69,11 +72,14 @@ def build_agent(robot: Robot, llm):
 
     def plan(state: AgentState) -> AgentState:
         g = state["grounding"]
-        if not g.feasible or g.target_id is None or g.relation is None or g.reference_id is None:
+        if not g.feasible or not g.steps:
             return {"actions": []}
         return {
             "actions": [
-                PickPlace(target_id=g.target_id, relation=g.relation, reference_id=g.reference_id)
+                PickPlace(
+                    target_id=s.target_id, relation=s.relation, reference_id=s.reference_id
+                )
+                for s in g.steps
             ]
         }
 
@@ -100,11 +106,26 @@ def build_agent(robot: Robot, llm):
         return {}
 
     def execute(state: AgentState) -> AgentState:
-        results = [robot.execute(action) for action in state["actions"]]
-        if all(r.success for r in results):
-            return {"results": results, "outcome": "success", "message": "done"}
-        failed = next(r for r in results if not r.success)
-        return {"results": results, "outcome": "failed", "message": failed.message}
+        results: list[ActionResult] = []
+        graph = state["scene_graph"]
+        for i, action in enumerate(state["actions"]):
+            result = robot.execute(action)
+            results.append(result)
+            if not result.success:
+                return {
+                    "results": results,
+                    "scene_graph": graph,
+                    "outcome": "failed",
+                    "message": f"step {i + 1}/{len(state['actions'])} failed: {result.message}",
+                }
+            # re-perceive between steps: the scene changed, so refresh the graph
+            graph = robot.get_scene_graph()
+        return {
+            "results": results,
+            "scene_graph": graph,
+            "outcome": "success",
+            "message": "done",
+        }
 
     def after_validate(state: AgentState) -> str:
         return "refuse" if state.get("outcome") == "refused" else "ok"

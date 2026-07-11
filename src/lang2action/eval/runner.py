@@ -111,9 +111,8 @@ def run_case(case: EvalCase, llm) -> CaseResult:
     grounding_correct = (
         grounding is not None
         and grounding.feasible
-        and grounding.target_id == case.expected_target
-        and grounding.relation == case.expected_relation
-        and grounding.reference_id == case.expected_reference
+        and [(s.target_id, s.relation, s.reference_id) for s in grounding.steps]
+        == [tuple(step) for step in case.expected_steps]
     )
     return CaseResult(
         case_id=case.case_id,
