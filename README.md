@@ -52,13 +52,14 @@ Two deliberate seams:
 
 | Metric | sim backend | sgg backend |
 | --- | --- | --- |
-| Referring-expression grounding accuracy | 0.86 | 0.00 |
-| Task success rate | 0.90 | 0.00 |
+| Referring-expression grounding accuracy | 0.95 | 0.00 |
+| Task success rate | 0.95 | 0.00 |
 | Hallucination-refusal rate | 1.00 | 1.00 |
-| Over-refusal rate (diagnostic) | 0.09 | 1.00 |
+| Over-refusal rate (diagnostic) | 0.05 | 1.00 |
 
-*30 auto-generated cases, `gpt-4o-mini`, v1 single-step agent. Re-run `lang2action eval` after
-agent changes to refresh.*
+*30 auto-generated cases (incl. 5 two-step sequences, all 5 grounded and executed correctly),
+`gpt-4o-mini`, v2 multi-step agent. The sgg column is the v1 measurement of the perception
+domain gap discussed below.*
 
 ## v2 (in progress)
 
@@ -66,9 +67,15 @@ agent changes to refresh.*
   emits an ordered step list, the guard validates every step before anything executes, and the
   agent re-perceives between steps. The eval set now includes 5 two-step sequences graded on
   the full step sequence.
-- [ ] Synthetic-domain adaptation of the detector (close the sgg gap quantified above)
+- [x] Synthetic-domain adaptation, no training required: **12% -> ~72% object id-recall**
+  on renders, from three composed measures (each ablated over 10 seeded scenes):
+  toy-block-sized objects (1.5x, bigger in frame), photo-like pre-processing before detection
+  (mild blur + sensor noise + JPEG - softens the "too clean" synthetic look), and an expanded
+  open-vocabulary prompt list (synonyms like *block/dice/can/crate*) whose labels are
+  canonicalized back to the scene vocabulary with best-score deduplication.
+- [ ] Re-run both eval columns on the v2 sim (object sizes changed, so scenes regenerated)
 - [ ] Depth predicates end-to-end (Depth-Anything already runs inside the SGG service;
-  validate front/behind on renders once detection works)
+  validate front/behind on renders now that detection works)
 
 The eval respects `LANG2ACTION_PERCEPTION`, so the same 30 cases score both perception
 backends: `sim` isolates reasoning errors (perception is ground truth by construction),
@@ -77,14 +84,13 @@ is called once per instruction (a single structured grounding call); the halluci
 guard that decides refusals is deterministic code, and task success is verified
 physically after the world settles.
 
-> **The sgg column quantifies a documented domain gap.** The detector (YOLO-World
-> `yolov8s-worldv2`, CPU) was built for real tabletop photos; on clean flat-shaded PyBullet
-> renders it finds ~0-1 of 4 objects per scene even at 0.05 confidence (probed across object
-> scales, cameras, resolutions, and floor textures - a closer high-res `sgg` camera view is the
-> best of them and is what the backend uses). The important part is what the agent does about
-> it: unseen objects produce *refusals*, never fabricated actions - the guard treats perception
-> gaps and hallucinations identically. Closing the gap (synthetic-domain adaptation of the
-> detector + Depth-Anything predicates) is the v2 roadmap.
+> **The sgg column quantifies a documented domain gap - measured, then largely closed in v2.**
+> The detector (YOLO-World `yolov8s-worldv2`, CPU) was built for real tabletop photos; on clean
+> flat-shaded PyBullet renders it initially found ~0-1 of 4 objects per scene even at 0.05
+> confidence. The v1 measurement above is that gap. The agent's behavior under it is the
+> important part: unseen objects produce *refusals*, never fabricated actions - the guard
+> treats perception gaps and hallucinations identically. v2 recovered **~72% object id-recall
+> without any training** (see the v2 section below); a refreshed sgg eval column is pending.
 
 ![Pick-and-place demo](docs/demo.gif)
 

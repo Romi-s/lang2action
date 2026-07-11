@@ -16,7 +16,8 @@ from lang2action.perception.models import Relation
 from lang2action.perception.spatial import infer_relations
 from lang2action.sim.world import TabletopWorld
 
-PLACE_GAP = 0.12  # planar center-to-center distance for left_of/right_of/...
+PLACE_GAP = 0.17  # planar center-to-center distance; must exceed the widest
+# pair of half-extents (two boxes: 2 x 0.0675 = 0.135) so placements don't collide
 CARRY_HEIGHT = 0.25
 STEP_SIZE = 0.01  # meters of gripper travel per simulation step
 

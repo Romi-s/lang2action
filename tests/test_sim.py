@@ -51,7 +51,7 @@ def test_scene_gen_unique_ids_and_separation():
     assert len(set(ids)) == 5
     for i, a in enumerate(specs):
         for b in specs[i + 1 :]:
-            assert math.dist(a.position[:2], b.position[:2]) >= 0.13
+            assert math.dist(a.position[:2], b.position[:2]) >= 0.17
 
 
 # -- ground-truth perception -----------------------------------------------------

@@ -18,14 +18,16 @@ COLORS: dict[str, tuple[float, float, float, float]] = {
 }
 
 # Half-extents per category; for cylinders x is the radius and z the half-height.
+# Sized like real toy blocks (~5-10 cm) - which also makes them large enough in
+# the camera frame for the open-vocabulary detector (v2 recall work).
 SIZES: dict[str, tuple[float, float, float]] = {
-    "cube": (0.025, 0.025, 0.025),
-    "box": (0.045, 0.035, 0.030),
-    "cylinder": (0.025, 0.025, 0.035),
+    "cube": (0.0375, 0.0375, 0.0375),
+    "box": (0.0675, 0.0525, 0.045),
+    "cylinder": (0.0375, 0.0375, 0.0525),
 }
 
-TABLE_BOUND = 0.22  # objects spawn with |x|,|y| below this
-MIN_SEPARATION = 0.13  # center-to-center distance between spawned objects
+TABLE_BOUND = 0.24  # objects spawn with |x|,|y| below this
+MIN_SEPARATION = 0.17  # center-to-center distance between spawned objects
 
 
 @dataclass(frozen=True)

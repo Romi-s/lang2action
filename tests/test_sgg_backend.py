@@ -50,6 +50,28 @@ def test_mapping_ids_and_predicates():
     assert len(graph.relations) == 2  # "touching" dropped
 
 
+def test_synonym_labels_canonicalized_and_deduplicated():
+    payload = {
+        "graph": {
+            "objects": [
+                # same physical object fired twice under synonym prompts:
+                # keep the higher-scoring detection, canonicalize the label
+                {"id": 0, "label": "block", "score": 0.4, "box_xyxy": [100, 100, 160, 160],
+                 "attributes": {"color": "red"}},
+                {"id": 1, "label": "cube", "score": 0.9, "box_xyxy": [102, 101, 158, 161],
+                 "attributes": {"color": "red"}},
+                {"id": 2, "label": "can", "score": 0.5, "box_xyxy": [300, 300, 340, 380],
+                 "attributes": {"color": "green"}},
+            ],
+            "relations": [],
+            "triplets": [],
+        }
+    }
+    graph = sgg_to_scene_graph(payload, width=640, height=480)
+    assert [o.id for o in graph.objects] == ["red_cube", "green_cylinder"]
+    assert graph.object_by_id("green_cylinder").category == "cylinder"
+
+
 def test_mapping_pseudo_positions_ordered():
     graph = sgg_to_scene_graph(PAYLOAD, width=640, height=480)
     red = graph.object_by_id("red_cube")
@@ -64,7 +86,7 @@ def test_http_backend_round_trip():
 
     def handler(request: httpx.Request) -> httpx.Response:
         assert request.url.path == "/analyze"
-        assert b"image/png" in request.read()
+        assert b"image/jpeg" in request.read()  # photo-like JPEG, not the raw render
         return httpx.Response(200, json=PAYLOAD)
 
     client = httpx.Client(transport=httpx.MockTransport(handler))
