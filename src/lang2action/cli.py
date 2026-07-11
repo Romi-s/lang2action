@@ -166,5 +166,30 @@ def eval(
         typer.echo(f"report written to {output}", err=True)
 
 
+@app.command("perception-eval")
+def perception_eval(
+    n_scenes: int = typer.Option(10, help="Number of seeded scenes."),
+    base_seed: int = typer.Option(1000, help="First scene seed."),
+    output: str = typer.Option("", help="If set, write the JSON report here."),
+) -> None:
+    """Score the real SGG backend against simulator ground truth (no LLM involved).
+
+    Reports object id-recall/precision and per-predicate relation precision/recall
+    on co-detected pairs - the in_front_of/behind rows validate the depth predicates.
+    Needs the SGG service running (LANG2ACTION_SGG_URL).
+    """
+    from pathlib import Path
+
+    from lang2action.eval.perception import run_perception_eval
+
+    settings = load_settings()
+    typer.echo(f"sgg service: {settings.sgg_url}", err=True)
+    report = run_perception_eval(settings.sgg_url, n_scenes=n_scenes, base_seed=base_seed)
+    typer.echo(report.as_markdown())
+    if output:
+        Path(output).write_text(report.to_json(), encoding="utf-8")
+        typer.echo(f"report written to {output}", err=True)
+
+
 if __name__ == "__main__":
     app()

@@ -50,16 +50,18 @@ Two deliberate seams:
 - [x] Docker + compose (agent + SGG service) + demo GIF
 - [x] Fill the metrics table from a live eval run (`lang2action eval`, both backends)
 
-| Metric | sim backend | sgg backend |
-| --- | --- | --- |
-| Referring-expression grounding accuracy | 0.95 | 0.00 |
-| Task success rate | 0.95 | 0.00 |
-| Hallucination-refusal rate | 1.00 | 1.00 |
-| Over-refusal rate (diagnostic) | 0.05 | 1.00 |
+| Metric | sim backend | sgg backend v1 | sgg backend v2 |
+| --- | --- | --- | --- |
+| Referring-expression grounding accuracy | 0.95 | 0.00 | 0.32 |
+| Task success rate | 0.95 | 0.00 | 0.32 |
+| Hallucination-refusal rate | 1.00 | 1.00 | 1.00 |
+| Over-refusal rate (diagnostic) | 0.05 | 1.00 | 0.68 |
 
-*30 auto-generated cases (incl. 5 two-step sequences, all 5 grounded and executed correctly),
-`gpt-4o-mini`, v2 multi-step agent. The sgg column is the v1 measurement of the perception
-domain gap discussed below.*
+*30 auto-generated cases (incl. 5 two-step sequences), `gpt-4o-mini`, v2 multi-step agent.
+The sgg v1 -> v2 jump is the training-free domain-gap work described below: a third of
+instructions now run image -> detection -> grounding -> physical execution end to end, and
+every remaining failure is a clean refusal (a missing object in the perceived graph), never a
+wrong action.*
 
 ## v2 (in progress)
 
@@ -73,9 +75,27 @@ domain gap discussed below.*
   (mild blur + sensor noise + JPEG - softens the "too clean" synthetic look), and an expanded
   open-vocabulary prompt list (synonyms like *block/dice/can/crate*) whose labels are
   canonicalized back to the scene vocabulary with best-score deduplication.
-- [ ] Re-run both eval columns on the v2 sim (object sizes changed, so scenes regenerated)
-- [ ] Depth predicates end-to-end (Depth-Anything already runs inside the SGG service;
-  validate front/behind on renders now that detection works)
+- [x] Re-run both eval columns on the v2 sim (table above; sgg end-to-end went 0.00 -> 0.32)
+- [x] Depth-predicate validation via `lang2action perception-eval` (below)
+
+### Perception quality (`lang2action perception-eval`, 15 scenes, no LLM)
+
+| Measure | Value |
+| --- | --- |
+| Object id-recall | 70% |
+| Object id-precision | 65% |
+
+| Predicate (on co-detected pairs) | Precision | Recall |
+| --- | --- | --- |
+| left_of / right_of | 96% | 61% |
+| in_front_of / behind (depth-informed) | 100% | 13% |
+
+Interpretation: the 2D geometric predicates work well; the depth-informed `in_front_of` /
+`behind` are **correct whenever they fire but fire rarely** (100% precision, 13% recall) -
+a precise, reproducible measurement of the thesis's known front/behind weakness, now
+scriptable per config change. `on_top_of` has no support in spawn scenes (nothing starts
+stacked); measuring it post-action is future work, as is raising depth-predicate recall
+(relationship thresholds / depth handling in the SGG service).
 
 The eval respects `LANG2ACTION_PERCEPTION`, so the same 30 cases score both perception
 backends: `sim` isolates reasoning errors (perception is ground truth by construction),
