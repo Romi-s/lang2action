@@ -19,3 +19,4 @@ eval_*.json
 *.mp4
 *.gif
 !docs/**/*.gif
+perception_report.json
